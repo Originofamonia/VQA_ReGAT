@@ -53,7 +53,7 @@ def train(model, train_loader, eval_loader, args, device=torch.device("cuda")):
                                weight_decay=args.weight_decay) 
 
     logger = utils.Logger(os.path.join(args.output, 'log.txt'))
-    best_eval_score = 0
+    # best_eval_score = 0
 
     utils.print_model(model, logger)
     logger.write('optim: adamax lr=%.4f, decay_step=%d, decay_rate=%.2f,'
@@ -64,8 +64,8 @@ def train(model, train_loader, eval_loader, args, device=torch.device("cuda")):
     last_eval_score, eval_score = 0, 0
     relation_type = train_loader.dataset.relation_type
 
-    for epoch in range(0, num_epochs):
-        pbar = tqdm(total=len(train_loader))
+    for epoch in range(num_epochs):
+        pbar = tqdm(train_loader)
         total_norm, count_norm = 0, 0
         total_loss, train_score = 0, 0
         count, average_loss, att_entropy = 0, 0, 0
@@ -88,6 +88,7 @@ def train(model, train_loader, eval_loader, args, device=torch.device("cuda")):
         batch_multiplier = args.grad_accu_steps
         for i, (v, norm_bb, q, target, _, _, bb, spa_adj_matrix,
                 sem_adj_matrix) in enumerate(train_loader):
+            print(v.size())
             batch_size = v.size(0)
             num_objects = v.size(1)
             if mini_batch_count == 0:

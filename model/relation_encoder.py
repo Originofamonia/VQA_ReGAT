@@ -47,7 +47,7 @@ class ImplicitRelationEncoder(nn.Module):
             self.v_transform = FCNet([v_dim, out_dim])
         else:
             self.v_transform = None
-        in_dim = out_dim+q_dim
+        in_dim = out_dim + q_dim
         self.implicit_relation = GAT(dir_num, 1, in_dim, out_dim,
                                      nongt_dim=nongt_dim,
                                      label_bias=label_bias,

@@ -121,7 +121,7 @@ class BUTD(nn.Module):
         return logits
 
 """
-This code is modified by Linjie Li from  Remi Cadene's repository.
+This code is modified by Linjie Li from Remi Cadene's repository.
 https://github.com/Cadene/vqa.pytorch
 """
 

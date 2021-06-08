@@ -8,6 +8,7 @@ https://arxiv.org/abs/1903.12314
 
 This code is written by Linjie Li.
 """
+
 import torch
 import torch.nn as nn
 from model.fusion import BAN, BUTD, MuTAN

@@ -55,7 +55,7 @@ def parse_args():
     '''
     parser.add_argument('--dataset', type=str, default='vqa',
                         choices=["vqa", "vqa_cp"])
-    parser.add_argument('--data_folder', type=str, default='./data')
+    parser.add_argument('--data_folder', type=str, default='data')
     parser.add_argument('--use_both', action='store_true',
                         help='use both train/val datasets to train?')
     parser.add_argument('--use_vg', action='store_true',
@@ -124,9 +124,9 @@ def main():
         raise ValueError("CUDA is not available," +
                          "this code currently only support GPU.")
     n_device = torch.cuda.device_count()
-    print("Found %d GPU cards for training" % (n_device))
+    print("Found %d GPU cards for training" % n_device)
     device = torch.device("cuda")
-    batch_size = args.batch_size*n_device
+    batch_size = args.batch_size * n_device
 
     torch.backends.cudnn.benchmark = True
 
@@ -264,7 +264,7 @@ def main():
     utils.create_dir(args.output)
     with open(join(args.output, 'hps.json'), 'w') as writer:
         json.dump(vars(args), writer, indent=4)
-    logger = utils.Logger(join(args.output, 'log.txt'))
+    # logger = utils.Logger(join(args.output, 'log.txt'))
 
     train(model, train_loader, eval_loader, args, device)
 

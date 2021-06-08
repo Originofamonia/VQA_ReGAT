@@ -23,7 +23,7 @@ class WordEmbedding(nn.Module):
     def __init__(self, ntoken, emb_dim, dropout, op=''):
         super(WordEmbedding, self).__init__()
         self.op = op
-        self.emb = nn.Embedding(ntoken+1, emb_dim, padding_idx=ntoken)
+        self.emb = nn.Embedding(ntoken+1, emb_dim, padding_idx=ntoken)  # lookup table
         if 'c' in op:
             self.emb_ = nn.Embedding(ntoken+1, emb_dim, padding_idx=ntoken)
             self.emb_.weight.requires_grad = False  # fixed
