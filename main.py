@@ -118,7 +118,7 @@ def parse_args():
     return args
 
 
-if __name__ == '__main__':
+def main():
     args = parse_args()
     if not torch.cuda.is_available():
         raise ValueError("CUDA is not available," +
@@ -185,7 +185,7 @@ if __name__ == '__main__':
     model = nn.DataParallel(model).to(device)
 
     if args.checkpoint != "":
-        print("Loading weights from %s" % (args.checkpoint))
+        print("Loading weights from %s" % args.checkpoint)
         if not os.path.exists(args.checkpoint):
             raise ValueError("No such checkpoint exists!")
         checkpoint = torch.load(args.checkpoint)
@@ -267,3 +267,7 @@ if __name__ == '__main__':
     logger = utils.Logger(join(args.output, 'log.txt'))
 
     train(model, train_loader, eval_loader, args, device)
+
+
+if __name__ == '__main__':
+    main()

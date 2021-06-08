@@ -30,13 +30,13 @@ rm data/v2_Annotations_Val_mscoco.zip
 
 # VQA cp-v2 Questions
 mkdir data/cp_v2_questions
-wget -P data/cp_v2_questions https://computing.ece.vt.edu/~aish/vqacp/vqacp_v2_train_questions.json 
-wget -P data/cp_v2_questions https://computing.ece.vt.edu/~aish/vqacp/vqacp_v2_test_questions.json 
+wget -P data/cp_v2_questions https://computing.ece.vt.edu/~aish/vqacp/vqacp_v2_train_questions.json
+wget -P data/cp_v2_questions https://computing.ece.vt.edu/~aish/vqacp/vqacp_v2_test_questions.json
 
 # VQA cp-v2 Annotations
 mkdir data/cp_v2_annotations
-wget -P data/cp_v2_annotations https://computing.ece.vt.edu/~aish/vqacp/vqacp_v2_train_annotations.json 
 wget -P data/cp_v2_annotations https://computing.ece.vt.edu/~aish/vqacp/vqacp_v2_train_annotations.json
+wget -P data/cp_v2_annotations https://computing.ece.vt.edu/~aish/vqacp/vqacp_v2_test_annotations.json
 
 # Visual Genome Annotations
 mkdir data/visualGenome
