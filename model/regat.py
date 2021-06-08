@@ -38,9 +38,9 @@ class ReGAT(nn.Module):
     def forward(self, v, b, q, implicit_pos_emb, sem_adj_matrix,
                 spa_adj_matrix, labels):
         """Forward
-        v: [batch, num_objs, obj_dim]
-        b: [batch, num_objs, b_dim]
-        q: [batch_size, seq_length]
+        v: [batch, num_objs, obj_dim] visual features
+        b: [batch, num_objs, b_dim] bounding box
+        q: [batch_size, seq_length] question embedding
         pos: [batch_size, num_objs, nongt_dim, emb_dim]
         sem_adj_matrix: [batch_size, num_objs, num_objs, num_edge_labels]
         spa_adj_matrix: [batch_size, num_objs, num_objs, num_edge_labels]
