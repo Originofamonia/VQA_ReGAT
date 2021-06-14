@@ -88,14 +88,13 @@ def train(model, train_loader, eval_loader, args, device=torch.device("cuda")):
         batch_multiplier = args.grad_accu_steps
         for i, (v, norm_bb, q, target, _, _, bb, spa_adj_matrix,
                 sem_adj_matrix) in enumerate(train_loader):
-            print(sem_adj_matrix.size())
             batch_size = v.size(0)
             num_objects = v.size(1)
             if mini_batch_count == 0:
                 optimizer.step()
                 optimizer.zero_grad()
                 mini_batch_count = batch_multiplier
-
+            # spa_adj_matrix: [128, 1], sem_adj_matrix: [128, 1]
             v = Variable(v).to(device)  # v: [128, 36, 2048]
             norm_bb = Variable(norm_bb).to(device)  # [128, 36, 6], bb: [128, 36, 4]
             q = Variable(q).to(device)  # [128, 14]

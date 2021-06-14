@@ -168,14 +168,14 @@ def torch_extract_position_matrix(bbox, nongt_dim=36):
     center_x = 0.5 * (xmin + xmax)
     center_y = 0.5 * (ymin + ymax)
     # [batch_size,num_boxes, num_boxes]
-    delta_x = center_x-torch.transpose(center_x, 1, 2)
+    delta_x = center_x - torch.transpose(center_x, 1, 2)
     delta_x = torch.div(delta_x, bbox_width)
 
     delta_x = torch.abs(delta_x)
     threshold = 1e-3
     delta_x[delta_x < threshold] = threshold
     delta_x = torch.log(delta_x)
-    delta_y = center_y-torch.transpose(center_y, 1, 2)
+    delta_y = center_y - torch.transpose(center_y, 1, 2)
     delta_y = torch.div(delta_y, bbox_height)
     delta_y = torch.abs(delta_y)
     delta_y[delta_y < threshold] = threshold
