@@ -134,7 +134,7 @@ def torch_broadcast_adj_matrix(adj_matrix, label_num=11,
 
 def torch_extract_position_embedding(position_mat, feat_dim, wave_length=1000,
                                      device=torch.device("cuda")):
-    # position_mat, [batch_size,num_rois, nongt_dim, 4]
+    # position_mat, [batch_size, num_rois, nongt_dim, 4]
     feat_range = torch.arange(0, feat_dim / 8)
     dim_mat = torch.pow(torch.ones((1,))*wave_length,
                         (8. / feat_dim) * feat_range)
@@ -143,22 +143,22 @@ def torch_extract_position_embedding(position_mat, feat_dim, wave_length=1000,
     div_mat = torch.div(position_mat.to(device), dim_mat)
     sin_mat = torch.sin(div_mat)
     cos_mat = torch.cos(div_mat)
-    # embedding, [batch_size,num_rois, nongt_dim, 4, feat_dim/4]
+    # embedding, [batch_size, num_rois, nongt_dim, 4, feat_dim/4]
     embedding = torch.cat([sin_mat, cos_mat], -1)
-    # embedding, [batch_size,num_rois, nongt_dim, feat_dim]
+    # embedding, [batch_size, num_rois, nongt_dim, feat_dim]
     embedding = embedding.view(embedding.shape[0], embedding.shape[1],
                                embedding.shape[2], feat_dim)
     return embedding
 
 
 def torch_extract_position_matrix(bbox, nongt_dim=36):
-    """ Extract position matrix
+    """ Extract position matrix, each sample is objects relative positions
 
     Args:
         bbox: [batch_size, num_boxes, 4]
 
     Returns:
-        position_matrix: [batch_size, num_boxes, nongt_dim, 4]
+        position_matrix: [batch_size, nongt_dim, num_boxes, 4]
     """
 
     xmin, ymin, xmax, ymax = torch.split(bbox, 1, dim=-1)  # 4 * [128, 36, 1]
@@ -214,8 +214,8 @@ def prepare_graph_variables(relation_type, bb, sem_adj_matrix, spa_adj_matrix,
     else:
         bb = bb.to(device)  # [128, 36, 4]
         pos_mat = torch_extract_position_matrix(bb, nongt_dim=nongt_dim)  # [128, 20, 36, 4]
-        print(pos_mat.size())
         pos_emb = torch_extract_position_embedding(
                         pos_mat, feat_dim=pos_emb_dim, device=device)
+        print(pos_emb.size())
         pos_emb_var = Variable(pos_emb).to(device)
     return pos_emb_var, sem_adj_matrix_var, spa_adj_matrix_var
