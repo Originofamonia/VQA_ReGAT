@@ -143,12 +143,11 @@ def torch_extract_position_embedding(position_mat, feat_dim, wave_length=1000,
     div_mat = torch.div(position_mat.to(device), dim_mat)  # [128, 20, 36, 4, 8]
     sin_mat = torch.sin(div_mat)
     cos_mat = torch.cos(div_mat)
-    # embedding, [batch_size, nongt_dim, num_rois, 4, feat_dim/4]
+    # embedding, [batch_size, nongt_dim, num_objs, 4, feat_dim/4]
     embedding = torch.cat([sin_mat, cos_mat], -1)  # [128, 20, 36, 4, 16]
-    # embedding, [batch_size, num_rois, nongt_dim, feat_dim]
+    # embedding, [batch_size, nongt_dim, num_objs, feat_dim]
     embedding = embedding.view(embedding.shape[0], embedding.shape[1],
-                               embedding.shape[2], feat_dim)
-    print(embedding.size())
+                               embedding.shape[2], feat_dim)  # [128, 20, 36, 64]
     return embedding
 
 
