@@ -264,8 +264,8 @@ def main():
     #     raise ValueError("Output directory ({}) already exists and is not "
     #                      "empty.".format(args.output))
     # utils.create_dir(args.output)
-    with open(join(args.output, 'hps.json'), 'w') as writer:
-        json.dump(vars(args), writer, indent=4)
+    # with open(join(args.output, 'hps.json'), 'w') as writer:
+    #     json.dump(vars(args), writer, indent=4)
     # logger = utils.Logger(join(args.output, 'log.txt'))
 
     train(model, train_loader, eval_loader, args, device)

@@ -156,9 +156,9 @@ def train(model, train_loader, eval_loader, args, device=torch.device("cuda")):
         if (eval_loader is not None) \
                 or (eval_loader is None and epoch >= args.saving_epoch):
             logger.write("saving current model weights to folder")
-            model_path = os.path.join(args.output, 'model_%d.pth' % epoch)
-            opt = optimizer if args.save_optim else None
-            utils.save_model(model_path, model, epoch, opt)
+            # model_path = os.path.join(args.output, 'model_%d.pth' % epoch)
+            # opt = optimizer if args.save_optim else None
+            # utils.save_model(model_path, model, epoch, opt)
 
 
 @torch.no_grad()
