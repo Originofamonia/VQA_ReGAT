@@ -1,7 +1,7 @@
-'''
+"""
 Copyright (c) Microsoft Corporation.
 Licensed under the MIT license.
-'''
+"""
 
 import os
 from os.path import join, exists
@@ -33,7 +33,7 @@ def parse_args():
     parser.add_argument('--lr_decay_rate', type=float, default=0.25)
     parser.add_argument('--lr_decay_step', type=int, default=2)
     parser.add_argument('--lr_decay_based_on_val', action='store_true',
-                        help='Learning rate decay when val score descreases')
+                        help='Learning rate decay when val score decreases')
     parser.add_argument('--grad_accu_steps', type=int, default=1)
     parser.add_argument('--grad_clip', type=float, default=0.25)
     parser.add_argument('--weight_decay', type=float, default=0)
@@ -43,7 +43,7 @@ def parse_args():
                         help='save optimizer')
     parser.add_argument('--log_interval', type=int, default=-1,
                         help='Print log for certain steps')
-    parser.add_argument('--seed', type=int, default=-1, help='random seed')
+    parser.add_argument('--seed', type=int, default=444, help='random seed')
 
     '''
     loading trained models
@@ -75,7 +75,7 @@ def parse_args():
                         help="op used in tfidf word embedding")
     parser.add_argument('--num_hid', type=int, default=1024)
     '''
-    Fusion Hyperparamters
+    Fusion Hyperparameters
     '''
     parser.add_argument('--ban_gamma', type=int, default=1, help='glimpse')
     parser.add_argument('--mutan_gamma', type=int, default=2, help='glimpse')
