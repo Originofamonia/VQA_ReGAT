@@ -184,8 +184,7 @@ def torch_extract_position_matrix(bbox, nongt_dim=36):
     delta_width = torch.log(delta_width)
     delta_height = torch.div(bbox_height, torch.transpose(bbox_height, 1, 2))
     delta_height = torch.log(delta_height)
-    concat_list = [delta_x, delta_y, delta_width, delta_height]
-    print(delta_x.size(), delta_y.size(), delta_width.size(), delta_height.size())
+    concat_list = [delta_x, delta_y, delta_width, delta_height]  # 4 * [128, 36, 36]
     for idx, sym in enumerate(concat_list):
         sym = sym[:, :nongt_dim]
         concat_list[idx] = torch.unsqueeze(sym, dim=3)
