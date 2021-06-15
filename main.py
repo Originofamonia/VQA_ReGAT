@@ -182,7 +182,9 @@ def main():
                                     'glove/glove6b_init_300d.npy'),
                                tfidf, weights)
 
-    model = nn.DataParallel(model).to(device)
+    model = model.to(device)
+    if n_device > 1:
+        model = nn.DataParallel(model)
 
     if args.checkpoint != "":
         print("Loading weights from %s" % args.checkpoint)
@@ -258,10 +260,10 @@ def main():
     args.output = output_meta_folder+"/%s_%s_%s_%d" % (
                 fusion_methods, args.relation_type,
                 args.dataset, args.seed)
-    if exists(args.output) and os.listdir(args.output):
-        raise ValueError("Output directory ({}) already exists and is not "
-                         "empty.".format(args.output))
-    utils.create_dir(args.output)
+    # if exists(args.output) and os.listdir(args.output):
+    #     raise ValueError("Output directory ({}) already exists and is not "
+    #                      "empty.".format(args.output))
+    # utils.create_dir(args.output)
     with open(join(args.output, 'hps.json'), 'w') as writer:
         json.dump(vars(args), writer, indent=4)
     # logger = utils.Logger(join(args.output, 'log.txt'))
