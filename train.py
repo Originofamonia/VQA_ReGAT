@@ -24,7 +24,7 @@ def instance_bce_with_logits(logits, labels, reduction='mean'):
     loss = F.binary_cross_entropy_with_logits(
         logits, labels, reduction=reduction)
     if reduction == "mean":
-        loss *= labels.size(1)
+        loss = loss * labels.size(1)
     return loss
 
 
@@ -107,7 +107,7 @@ def train(model, train_loader, eval_loader, args, device=torch.device("cuda")):
                               spa_adj_matrix)
             loss = instance_bce_with_logits(pred, target)
 
-            loss /= batch_multiplier
+            loss = loss / batch_multiplier
             loss.clone().backward()
             mini_batch_count -= 1
             total_norm += nn.utils.clip_grad_norm_(model.parameters(),
