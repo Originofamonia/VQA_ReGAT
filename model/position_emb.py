@@ -213,6 +213,7 @@ def prepare_graph_variables(relation_type, bb, sem_adj_matrix, spa_adj_matrix,
         sem_adj_matrix_var = Variable(sem_adj_matrix).to(device)
     else:
         bb = bb.to(device)
+        print(bb.size())
         pos_mat = torch_extract_position_matrix(bb, nongt_dim=nongt_dim)
         pos_emb = torch_extract_position_embedding(
                         pos_mat, feat_dim=pos_emb_dim, device=device)
