@@ -24,7 +24,7 @@ def instance_bce_with_logits(logits, labels, reduction='mean'):
     loss = F.binary_cross_entropy_with_logits(
         logits, labels, reduction=reduction)
     if reduction == "mean":
-        loss *= labels.size(1).detach()
+        loss *= labels.size(1)
         print(labels.size(1))
     print(loss)
     return loss
