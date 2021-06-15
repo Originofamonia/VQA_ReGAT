@@ -255,11 +255,11 @@ def main():
         eval_loader = DataLoader(val_dset, batch_size, shuffle=False,
                                  num_workers=4, collate_fn=trim_collate)
 
-    output_meta_folder = join(args.output, "regat_%s" % args.relation_type)
-    utils.create_dir(output_meta_folder)
-    args.output = output_meta_folder+"/%s_%s_%s_%d" % (
-                fusion_methods, args.relation_type,
-                args.dataset, args.seed)
+    # output_meta_folder = join(args.output, "regat_%s" % args.relation_type)
+    # utils.create_dir(output_meta_folder)
+    # args.output = output_meta_folder+"/%s_%s_%s_%d" % (
+    #             fusion_methods, args.relation_type,
+    #             args.dataset, args.seed)
     # if exists(args.output) and os.listdir(args.output):
     #     raise ValueError("Output directory ({}) already exists and is not "
     #                      "empty.".format(args.output))
