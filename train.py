@@ -105,11 +105,10 @@ def train(model, train_loader, eval_loader, args, device=torch.device("cuda")):
                 args.sem_label_num, device)
             pred, att = model(v, norm_bb, q, pos_emb, sem_adj_matrix,
                               spa_adj_matrix)
-            print(pred.size())
             loss = instance_bce_with_logits(pred, target)
 
             loss /= batch_multiplier
-            loss.backward()
+            loss.clone().backward()
             mini_batch_count -= 1
             total_norm += nn.utils.clip_grad_norm_(model.parameters(),
                                                    args.grad_clip)
