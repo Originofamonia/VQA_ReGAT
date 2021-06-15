@@ -36,7 +36,7 @@ class ReGAT(nn.Module):
         self.classifier = classifier
 
     def forward(self, v, b, q, implicit_pos_emb, sem_adj_matrix,
-                spa_adj_matrix, labels):
+                spa_adj_matrix):
         """Forward
         v: [batch, num_objs, obj_dim] visual features
         b: [batch, num_objs, b_dim] bounding box

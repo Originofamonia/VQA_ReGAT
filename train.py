@@ -25,8 +25,6 @@ def instance_bce_with_logits(logits, labels, reduction='mean'):
         logits, labels, reduction=reduction)
     if reduction == "mean":
         loss *= labels.size(1)
-    print(logits.size())
-    print(labels.size())
     return loss
 
 
@@ -106,7 +104,8 @@ def train(model, train_loader, eval_loader, args, device=torch.device("cuda")):
                 args.nongt_dim, args.imp_pos_emb_dim, args.spa_label_num,
                 args.sem_label_num, device)
             pred, att = model(v, norm_bb, q, pos_emb, sem_adj_matrix,
-                              spa_adj_matrix, target)
+                              spa_adj_matrix)
+            print(pred.size())
             loss = instance_bce_with_logits(pred, target)
 
             loss /= batch_multiplier
