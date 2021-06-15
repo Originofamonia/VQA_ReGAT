@@ -98,7 +98,7 @@ def parse_args():
                         help='number of directions in relation graph')
     parser.add_argument('--relation_dim', type=int, default=1024,
                         help='relation feature dim')
-    parser.add_argument('--nongt_dim', type=int, default=20,
+    parser.add_argument('--nongt_dim', type=int, default=20,  # num of objects per image, is 36
                         help='number of objects consider relations per image')
     parser.add_argument('--num_heads', type=int, default=16,
                         help='number of attention heads \

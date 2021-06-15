@@ -348,7 +348,7 @@ class VQAFeatureDataset(Dataset):
 
     def __getitem__(self, index):
         entry = self.entries[index]
-        raw_question = entry["question"]
+        # raw_question = entry["question"]
         image_id = entry["image_id"]
 
         question = entry['q_token']
