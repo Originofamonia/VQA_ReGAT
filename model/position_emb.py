@@ -170,7 +170,7 @@ def torch_extract_position_matrix(bbox, nongt_dim=36):
     # [batch_size, num_boxes, num_boxes]
     print(center_x.size())
     delta_x = center_x - torch.transpose(center_x, 1, 2)
-    print(center_x.size())
+    print(torch.transpose(center_x, 1, 2).size())
     print(delta_x.size())
     delta_x = torch.div(delta_x, bbox_width)
 
