@@ -95,10 +95,10 @@ def train(model, train_loader, eval_loader, args, device=torch.device("cuda")):
                 optimizer.zero_grad()
                 mini_batch_count = batch_multiplier
             # spa_adj_matrix: [128, 1], sem_adj_matrix: [128, 1]
-            v = Variable(v).to(device)  # v: [128, 36, 2048]
-            norm_bb = Variable(norm_bb).to(device)  # [128, 36, 6], bb: [128, 36, 4]
-            q = Variable(q).to(device)  # [128, 14]
-            target = Variable(target).to(device)  # [128, 3129]
+            # v = Variable(v).to(device)  # v: [128, 36, 2048]
+            # norm_bb = Variable(norm_bb).to(device)  # [128, 36, 6], bb: [128, 36, 4]
+            # q = Variable(q).to(device)  # [128, 14]
+            # target = Variable(target).to(device)  # [128, 3129]
             pos_emb, sem_adj_matrix, spa_adj_matrix = prepare_graph_variables(
                 relation_type, bb, sem_adj_matrix, spa_adj_matrix, num_objects,
                 args.nongt_dim, args.imp_pos_emb_dim, args.spa_label_num,

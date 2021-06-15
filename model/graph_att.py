@@ -23,8 +23,8 @@ class GAttNet(nn.Module):
         Args:
             label_num: numer of edge labels
             dir_num: number of edge directions
-            feat_dim: dimension of roi_feat
-            pos_emb_dim: dimension of postion embedding for implicit relation, set as -1 for explicit relation
+            # feat_dim: dimension of roi_feat
+            pos_emb_dim: dimension of position embedding for implicit relation, set as -1 for explicit relation
 
         Returns:
             output: [num_rois, ovr_feat_dim, output_dim]
@@ -68,7 +68,7 @@ class GAttNet(nn.Module):
             raise ValueError(
                 f"position embedding is NOT None "
                 f"with pos_emb_dim < 0")
-        batch_size, num_rois, feat_dim = v_feat.shape
+        # batch_size, num_rois, feat_dim = v_feat.shape
         nongt_dim = self.nongt_dim
 
         adj_matrix = adj_matrix.float()
