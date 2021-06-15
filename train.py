@@ -22,6 +22,8 @@ from model.position_emb import prepare_graph_variables
 def instance_bce_with_logits(logits, labels, reduction='mean'):
     assert logits.dim() == 2
     criterion = torch.nn.BCEWithLogitsLoss()
+    print(logits)
+    print(labels)
     loss = criterion(logits, labels)
     # loss = F.binary_cross_entropy_with_logits(
     #     logits, labels, reduction=reduction)
