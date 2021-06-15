@@ -47,9 +47,9 @@ class ReGAT(nn.Module):
 
         return: logits, not probs
         """
-        w_emb = self.w_emb(q)
-        q_emb_seq = self.q_emb.forward_all(w_emb)  # [batch, q_len, q_dim]
-        q_emb_self_att = self.q_att(q_emb_seq)
+        w_emb = self.w_emb(q)  # [64, 14, 600]
+        q_emb_seq = self.q_emb.forward_all(w_emb)  # [batch, q_len, q_dim]  [64, 14, 1024]
+        q_emb_self_att = self.q_att(q_emb_seq)  # [64, 1024]
 
         # [batch_size, num_rois, out_dim]
         if self.relation_type == "semantic":
@@ -58,7 +58,7 @@ class ReGAT(nn.Module):
             v_emb = self.v_relation.forward(v, spa_adj_matrix, q_emb_self_att)
         else:  # implicit
             v_emb = self.v_relation.forward(v, implicit_pos_emb,
-                                            q_emb_self_att)
+                                            q_emb_self_att)  # [64, 36, 1024]
 
         if self.fusion == "ban":
             joint_emb, att = self.joint_embedding(v_emb, q_emb_seq, b)
@@ -66,7 +66,7 @@ class ReGAT(nn.Module):
             q_emb = self.q_emb(w_emb)  # [batch, q_dim]
             joint_emb, att = self.joint_embedding(v_emb, q_emb)
         else:  # mutan
-            joint_emb, att = self.joint_embedding(v_emb, q_emb_self_att)
+            joint_emb, att = self.joint_embedding(v_emb, q_emb_self_att)  # [64, 3129], [64, 2048]
         if self.classifier:
             logits = self.classifier(joint_emb)
         else:

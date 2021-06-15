@@ -59,10 +59,10 @@ class ImplicitRelationEncoder(nn.Module):
         Args:
             v: [batch_size, num_rois, v_dim]
             q: [batch_size, q_dim]
-            position_embedding: [batch_size, num_rois, nongt_dim, emb_dim]
+            position_embedding: [batch_size, nongt_dim, num_rois, emb_dim]
 
         Returns:
-            output: [batch_size, num_rois, out_dim,3]
+            output: [batch_size, num_rois, out_dim]
         """
         # [batch_size, num_rois, num_rois, 1]
         imp_adj_mat = Variable(
