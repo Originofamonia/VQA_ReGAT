@@ -25,8 +25,8 @@ def instance_bce_with_logits(logits, labels, reduction='mean'):
         logits, labels, reduction=reduction)
     if reduction == "mean":
         loss *= labels.size(1)
-    print(logits)
-    print(labels)
+    print(logits.size())
+    print(labels.size())
     return loss
 
 
