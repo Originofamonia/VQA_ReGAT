@@ -214,6 +214,16 @@ def prepare_graph_variables(relation_type, bb, sem_adj_matrix, spa_adj_matrix,
     else:
         bb = bb.to(device)  # [128, 36, 4]
         print(bb[0, 0])
+        print(bb[0, 1])
+        print(bb[0, 2])
+        print(bb[0, 3])
+        print(bb[0, 4])
+        print(bb[0, 5])
+        print(bb[0, 6])
+        print(bb[0, 7])
+        print(bb[0, 8])
+        print(bb[0, 9])
+        print(bb[0, 10])
         pos_mat = torch_extract_position_matrix(bb, nongt_dim=nongt_dim)  # [128, 20, 36, 4]
         print(pos_mat)
         pos_emb = torch_extract_position_embedding(
