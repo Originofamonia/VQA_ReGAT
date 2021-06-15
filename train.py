@@ -100,7 +100,7 @@ def train(model, train_loader, eval_loader, args, device=torch.device("cuda")):
             v = v.to(device)  # v: [128, 36, 2048]
             norm_bb = norm_bb.to(device)  # [128, 36, 6], bb: [128, 36, 4]
             q = q.to(device)  # [128, 14]
-            target = target.to(device)  # [128, 3129]
+            target = target.to(device)  # [128, 3129] 128 is because 2 gpus
             pos_emb, sem_adj_matrix, spa_adj_matrix = prepare_graph_variables(
                 relation_type, bb, sem_adj_matrix, spa_adj_matrix, num_objects,
                 args.nongt_dim, args.imp_pos_emb_dim, args.spa_label_num,
@@ -180,10 +180,10 @@ def evaluate(model, dataloader, device, args):
             sem_adj_matrix) in enumerate(dataloader):
         batch_size = v.size(0)
         num_objects = v.size(1)
-        v = Variable(v).to(device)
-        norm_bb = Variable(norm_bb).to(device)
-        q = Variable(q).to(device)
-        target = Variable(target).to(device)
+        v = v.to(device)
+        norm_bb = norm_bb.to(device)
+        q = q.to(device)
+        target = target.to(device)
 
         pos_emb, sem_adj_matrix, spa_adj_matrix = prepare_graph_variables(
             relation_type, bb, sem_adj_matrix, spa_adj_matrix, num_objects,

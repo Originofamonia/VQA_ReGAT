@@ -65,9 +65,8 @@ class ImplicitRelationEncoder(nn.Module):
             output: [batch_size, num_rois, out_dim]
         """
         # [batch_size, num_rois, num_rois, 1]
-        imp_adj_mat = Variable(
-            torch.ones(
-                v.size(0), v.size(1), v.size(1), 1)).to(v.device)
+        imp_adj_mat = torch.ones(
+                v.size(0), v.size(1), v.size(1), 1).to(v.device)
         imp_v = self.v_transform(v) if self.v_transform else v
 
         for i in range(self.num_steps):
