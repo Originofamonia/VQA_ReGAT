@@ -140,12 +140,12 @@ def torch_extract_position_embedding(position_mat, feat_dim, wave_length=1000,
                         (8. / feat_dim) * feat_range)
     dim_mat = dim_mat.view(1, 1, 1, -1).to(device)  # [1, 1, 1, 8]
     position_mat = torch.unsqueeze(100.0 * position_mat, dim=4)  # [128, 20, 36, 4, 1]
-    div_mat = torch.div(position_mat.to(device), dim_mat)
-    print(div_mat.size())
+    div_mat = torch.div(position_mat.to(device), dim_mat)  # [128, 20, 36, 4, 8]
     sin_mat = torch.sin(div_mat)
     cos_mat = torch.cos(div_mat)
     # embedding, [batch_size, num_rois, nongt_dim, 4, feat_dim/4]
     embedding = torch.cat([sin_mat, cos_mat], -1)
+    print(embedding.size())
     # embedding, [batch_size, num_rois, nongt_dim, feat_dim]
     embedding = embedding.view(embedding.shape[0], embedding.shape[1],
                                embedding.shape[2], feat_dim)
