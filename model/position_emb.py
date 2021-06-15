@@ -162,7 +162,7 @@ def torch_extract_position_matrix(bbox, nongt_dim=36):
     """
 
     xmin, ymin, xmax, ymax = torch.split(bbox, 1, dim=-1)
-    print(xmin, ymin, xmax, ymax)
+    print(xmin.size(), ymin.size(), xmax.size(), ymax.size())
     # [batch_size, num_boxes, 1]
     bbox_width = xmax - xmin + 1.
     bbox_height = ymax - ymin + 1.
