@@ -190,7 +190,7 @@ def evaluate(model, dataloader, device, args):
             args.nongt_dim, args.imp_pos_emb_dim, args.spa_label_num,
             args.sem_label_num, device)
         pred, att = model(v, norm_bb, q, pos_emb, sem_adj_matrix,
-                          spa_adj_matrix, target)
+                          spa_adj_matrix)
         batch_score = compute_score_with_logits(
             pred, target, device).sum()
         score += batch_score
