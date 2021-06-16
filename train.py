@@ -76,7 +76,7 @@ def train(model, train_loader, eval_loader, args, device=torch.device("cuda")):
             for i in range(len(optimizer.param_groups)):
                 optimizer.param_groups[i]['lr'] = gradual_warmup_steps[epoch]
             print('gradual warmup lr: %.4f' %
-                         optimizer.param_groups[-1]['lr'])
+                  optimizer.param_groups[-1]['lr'])
         elif (epoch in lr_decay_epochs or
               eval_score < last_eval_score and args.lr_decay_based_on_val):
             for i in range(len(optimizer.param_groups)):
@@ -89,7 +89,7 @@ def train(model, train_loader, eval_loader, args, device=torch.device("cuda")):
         mini_batch_count = 0
         batch_multiplier = args.grad_accu_steps
         for i, (v, norm_bb, q, target, _, _, bb, spa_adj_matrix,
-                sem_adj_matrix) in enumerate(train_loader):
+                sem_adj_matrix) in enumerate(pbar):
             batch_size = v.size(0)
             num_objects = v.size(1)
             if mini_batch_count == 0:
@@ -118,7 +118,6 @@ def train(model, train_loader, eval_loader, args, device=torch.device("cuda")):
             batch_score = compute_score_with_logits(pred, target, device).sum()
             total_loss += loss.data.item() * batch_multiplier * v.size(0)
             train_score += batch_score
-            pbar.update(1)
 
             if args.log_interval > 0:
                 average_loss += loss.data.item() * batch_multiplier
@@ -129,32 +128,31 @@ def train(model, train_loader, eval_loader, args, device=torch.device("cuda")):
                 if i % args.log_interval == 0:
                     att_entropy /= count
                     average_loss /= count
-                    print("step {} / {} (epoch {}), ave_loss {:.3f},".format(
-                        i, len(train_loader), epoch,
-                        average_loss),
-                        "att_entropy {:.3f}".format(att_entropy))
+                    desc = "Step {} / {} (Epoch {}), ave_loss {:.3f}," \
+                           " att_entropy {:.3f}".format(i, len(train_loader), epoch,
+                                                        average_loss, att_entropy)
+                    pbar.set_description(desc)
                     average_loss = 0
                     count = 0
                     att_entropy = 0
 
         total_loss /= N
         train_score = 100 * train_score / N
+        print('Epoch %d, time: %.2f' % (epoch, time.time() - t))
+        print('Train_loss: %.2f, norm: %.4f, score: %.2f'
+              % (total_loss, total_norm / count_norm, train_score))
         if eval_loader is not None:
             eval_score, bound, entropy = evaluate(
                 model, eval_loader, device, args)
 
-        print('epoch %d, time: %.2f' % (epoch, time.time() - t))
-        print('\ttrain_loss: %.2f, norm: %.4f, score: %.2f'
-                     % (total_loss, total_norm / count_norm, train_score))
-        if eval_loader is not None:
-            print('\teval score: %.2f (%.2f)'
-                         % (100 * eval_score, 100 * bound))
+            print('Eval score: %.2f (%.2f)'
+                  % (100 * eval_score, 100 * bound))
 
             if entropy is not None:
                 info = ''
                 for i in range(entropy.size(0)):
                     info = info + ' %.2f' % entropy[i]
-                print('\tentropy: ' + info)
+                print('Entropy: ' + info)
         # if (eval_loader is not None) \
         #         or (eval_loader is None and epoch >= args.saving_epoch):
         # logger.write("saving current model weights to folder")
@@ -170,15 +168,13 @@ def evaluate(model, dataloader, device, args):
     score = 0
     upper_bound = 0
     num_data = 0
-    # N = len(dataloader.dataset)
     entropy = None
     if model.module.fusion == "ban":
         entropy = torch.Tensor(model.module.glimpse).zero_().to(device)
-    pbar = tqdm(total=len(dataloader))
+    pbar = tqdm(dataloader)
 
     for i, (v, norm_bb, q, target, _, _, bb, spa_adj_matrix,
-            sem_adj_matrix) in enumerate(dataloader):
-        # batch_size = v.size(0)
+            sem_adj_matrix) in enumerate(pbar):
         num_objects = v.size(1)
         v = v.to(device)
         norm_bb = norm_bb.to(device)
@@ -199,7 +195,6 @@ def evaluate(model, dataloader, device, args):
         if att is not None and 0 < model.module.glimpse \
                 and entropy is not None:
             entropy += calc_entropy(att.data)[:model.module.glimpse]
-        pbar.update(1)
 
     score = score / len(dataloader.dataset)
     upper_bound = upper_bound / len(dataloader.dataset)

@@ -41,7 +41,7 @@ def parse_args():
     parser.add_argument('--output', type=str, default='saved_models/')
     parser.add_argument('--save_optim', action='store_true',
                         help='save optimizer')
-    parser.add_argument('--log_interval', type=int, default=-1,
+    parser.add_argument('--log_interval', type=int, default=5,
                         help='Print log for certain steps')
     parser.add_argument('--seed', type=int, default=444, help='random seed')
 
