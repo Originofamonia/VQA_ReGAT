@@ -165,7 +165,7 @@ class MuTAN_Attention(nn.Module):
     def process_attention(self, q, v):
         batch_size = q.size(0)
         n_regions = v.size(1)
-        q = q[:, None, :].expand(q.size(0), n_regions, q.size(1))
+        q = q[:, None, :].expand(q.size(0), n_regions, q.size(1)).clone()
         alpha = self.fusion([
             q.contiguous().view(batch_size*n_regions, -1),
             v.contiguous().view(batch_size*n_regions, -1)
