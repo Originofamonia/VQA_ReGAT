@@ -178,7 +178,7 @@ def evaluate(model, dataloader, device, args):
 
     for i, (v, norm_bb, q, target, _, _, bb, spa_adj_matrix,
             sem_adj_matrix) in enumerate(dataloader):
-        batch_size = v.size(0)
+        # batch_size = v.size(0)
         num_objects = v.size(1)
         v = v.to(device)
         norm_bb = norm_bb.to(device)
