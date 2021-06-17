@@ -37,7 +37,7 @@ def parse_args():
     parser.add_argument('--grad_accu_steps', type=int, default=1)
     parser.add_argument('--grad_clip', type=float, default=0.25)
     parser.add_argument('--weight_decay', type=float, default=0)
-    parser.add_argument('--batch_size', type=int, default=64)
+    parser.add_argument('--batch_size', type=int, default=128)
     parser.add_argument('--output', type=str, default='saved_models/')
     parser.add_argument('--save_optim', action='store_true',
                         help='save optimizer')
