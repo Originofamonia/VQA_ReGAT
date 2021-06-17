@@ -19,7 +19,8 @@ from model.fc import FCNet
 def q_expand_v_cat(q, v, mask=True):
     q = q.view(q.size(0), 1, q.size(1))
     repeat_vals = (-1, v.shape[1], -1)
-    q_expand = q.expand(*repeat_vals).clone()
+    # q_expand = q.expand(*repeat_vals).clone()
+    q_expand = q.repeat(1, v.shape[1], 1)
     if mask:
         v_sum = v.sum(-1)
         mask_index = torch.nonzero(v_sum == 0)
