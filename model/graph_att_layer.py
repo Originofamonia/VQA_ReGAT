@@ -8,6 +8,7 @@ https://arxiv.org/abs/1903.12314
 
 This code is written by Linjie Li.
 """
+
 import torch
 import torch.nn as nn
 from model.fc import FCNet
@@ -18,14 +19,14 @@ from torch.nn.utils.weight_norm import weight_norm
 class GraphSelfAttentionLayer(nn.Module):
     def __init__(self, feat_dim, nongt_dim=20, pos_emb_dim=-1,
                  num_heads=16, dropout=[0.2, 0.5]):
-        """ Attetion module with vectorized version
+        """ Attention module with vectorized version
 
         Args:
-            position_embedding: [num_rois, nongt_dim, pos_emb_dim]
-                                used in implicit relation
+            # position_embedding: [num_rois, nongt_dim, pos_emb_dim]
+            #                     used in implicit relation
             pos_emb_dim: set as -1 if explicit relation
             nongt_dim: number of objects consider relations per image
-            fc_dim: should be same as num_heads
+            # fc_dim: should be same as num_heads
             feat_dim: dimension of roi_feat
             num_heads: number of attention heads
         Returns:
@@ -129,7 +130,7 @@ class GraphSelfAttentionLayer(nn.Module):
         if adj_matrix is not None:
             # weighted_aff_transposed, [batch_size,num_rois, nongt_dim, num_heads]
             weighted_aff_transposed = torch.transpose(weighted_aff, 2, 3)
-            zero_vec = -9e15*torch.ones_like(weighted_aff_transposed)
+            zero_vec = -9e15 * torch.ones_like(weighted_aff_transposed)
 
             adj_matrix = adj_matrix.view(
                             adj_matrix.shape[0], adj_matrix.shape[1],

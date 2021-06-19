@@ -100,7 +100,7 @@ class ExplicitRelationEncoder(nn.Module):
             self.v_transform = FCNet([v_dim, out_dim])
         else:
             self.v_transform = None
-        in_dim = out_dim+q_dim
+        in_dim = out_dim + q_dim
         self.explicit_relation = GAT(dir_num, label_num, in_dim, out_dim,
                                      nongt_dim=nongt_dim,
                                      num_heads=num_heads,
