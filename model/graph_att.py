@@ -18,13 +18,14 @@ class GAttNet(nn.Module):
     def __init__(self, dir_num, label_num, in_feat_dim, out_feat_dim,
                  nongt_dim=20, dropout=0.2, label_bias=True, 
                  num_heads=16, pos_emb_dim=-1):
-        """ Attetion module with vectorized version
+        """ Attention module with vectorized version
 
         Args:
             label_num: numer of edge labels
             dir_num: number of edge directions
             # feat_dim: dimension of roi_feat
-            pos_emb_dim: dimension of position embedding for implicit relation, set as -1 for explicit relation
+            pos_emb_dim: dimension of position embedding for implicit relation,
+             set as -1 for explicit relation
 
         Returns:
             output: [num_rois, ovr_feat_dim, output_dim]
@@ -73,20 +74,20 @@ class GAttNet(nn.Module):
 
         adj_matrix = adj_matrix.float()
 
-        adj_matrix_list = [adj_matrix, adj_matrix.transpose(1, 2)]
+        adj_matrix_list = [adj_matrix, adj_matrix.transpose(1, 2)]  # 2 directions
 
         # Self - looping edges
-        # [batch_size,num_rois, out_feat_dim]
+        # [batch_size, num_rois, out_feat_dim]
         self_feat = self.self_weights(v_feat)
 
         output = self_feat
         neighbor_emb = [0] * self.dir_num
         for d in range(self.dir_num):
-            # [batch_size,num_rois, nongt_dim,label_num]
-            input_adj_matrix = adj_matrix_list[d][:, :, :nongt_dim, :]
-            condensed_adj_matrix = torch.sum(input_adj_matrix, dim=-1)
+            # [batch_size,num_rois, nongt_dim, label_num]
+            input_adj_matrix = adj_matrix_list[d][:, :, :nongt_dim, :]  # [128, 36, 20, 1]
+            condensed_adj_matrix = torch.sum(input_adj_matrix, dim=-1)  # [128, 36, 20]
 
-            # [batch_size,num_rois, nongt_dim]
+            # [batch_size, num_rois, nongt_dim]
             v_biases_neighbors = self.bias(input_adj_matrix).squeeze(-1)
 
             # [batch_size,num_rois, out_feat_dim]

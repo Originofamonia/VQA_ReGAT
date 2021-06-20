@@ -66,12 +66,13 @@ class ImplicitRelationEncoder(nn.Module):
             output: [batch_size, num_rois, out_dim]
         """
         # [batch_size, num_rois, num_rois, 1]
-        imp_adj_mat = torch.ones(
-                v.size(0), v.size(1), v.size(1), 1).to(v.device)
-        imp_v = self.v_transform(v) if self.v_transform else v
+        imp_adj_mat = torch.ones(v.size(0), v.size(1), v.size(1),
+                 1).to(v.device)  # [128, 36, 36, 1]
+        imp_v = self.v_transform(v) if self.v_transform else v  # [128, 36, 1024]
 
         for i in range(self.num_steps):
-            v_cat_q = q_expand_v_cat(q, imp_v, mask=True)
+            v_cat_q = q_expand_v_cat(q, imp_v, mask=True)  # [128, 36, 2048]
+            # position embedding: [128, 20, 36, 64]
             imp_v_rel = self.implicit_relation.forward(v_cat_q,
                                                        imp_adj_mat,
                                                        position_embedding)
