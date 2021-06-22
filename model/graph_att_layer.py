@@ -68,30 +68,30 @@ class GraphSelfAttentionLayer(nn.Module):
         batch_size = roi_feat.size(0)
         num_rois = roi_feat.size(1)
         nongt_dim = self.nongt_dim if self.nongt_dim < num_rois else num_rois
-        # [batch_size,nongt_dim, feat_dim]
+        # [batch_size, nongt_dim, feat_dim]
         nongt_roi_feat = roi_feat[:, :nongt_dim, :]
 
-        # [batch_size,num_rois, self.dim[0] = feat_dim]
+        # [batch_size, num_rois, self.dim[0] = feat_dim]
         q_data = self.query(roi_feat)
 
-        # [batch_size,num_rois, num_heads, feat_dim /num_heads]
+        # [batch_size, num_rois, num_heads, feat_dim /num_heads]
         q_data_batch = q_data.view(batch_size, num_rois, self.num_heads,
                                    self.dim_group[0])
 
-        # [batch_size,num_heads, num_rois, feat_dim /num_heads]
+        # [batch_size, num_heads, num_rois, feat_dim /num_heads]
         q_data_batch = torch.transpose(q_data_batch, 1, 2)
 
-        # [batch_size,nongt_dim, self.dim[1] = feat_dim]
+        # [batch_size, nongt_dim, self.dim[1] = feat_dim]
         k_data = self.key(nongt_roi_feat)
 
-        # [batch_size,nongt_dim, num_heads, feat_dim /num_heads]
+        # [batch_size, nongt_dim, num_heads, feat_dim /num_heads]
         k_data_batch = k_data.view(batch_size, nongt_dim, self.num_heads,
                                    self.dim_group[1])
 
-        # [batch_size,num_heads, nongt_dim, feat_dim /num_heads]
+        # [batch_size, num_heads, nongt_dim, feat_dim /num_heads]
         k_data_batch = torch.transpose(k_data_batch, 1, 2)
 
-        # [batch_size,nongt_dim, feat_dim]
+        # [batch_size, nongt_dim, feat_dim]
         v_data = nongt_roi_feat
 
         # [batch_size, num_heads, num_rois, nongt_dim]
@@ -99,7 +99,7 @@ class GraphSelfAttentionLayer(nn.Module):
 
         # aff_scale, [batch_size, num_heads, num_rois, nongt_dim]
         aff_scale = (1.0 / math.sqrt(float(self.dim_group[1]))) * aff
-        # aff_scale, [batch_size,num_rois,num_heads, nongt_dim]
+        # aff_scale, [batch_size, num_rois,num_heads, nongt_dim]
         aff_scale = torch.transpose(aff_scale, 1, 2)
         weighted_aff = aff_scale
 
