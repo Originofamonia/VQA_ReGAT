@@ -99,36 +99,36 @@ class GraphSelfAttentionLayer(nn.Module):
 
         # aff_scale, [batch_size, num_heads, num_rois, nongt_dim]
         aff_scale = (1.0 / math.sqrt(float(self.dim_group[1]))) * aff
-        # aff_scale, [batch_size, num_rois,num_heads, nongt_dim]
+        # aff_scale, [batch_size, num_rois, num_heads, nongt_dim]
         aff_scale = torch.transpose(aff_scale, 1, 2)
         weighted_aff = aff_scale
 
         if position_embedding is not None and self.pos_emb_dim > 0:
-            # Adding goemetric features
+            # Adding geometric features
             position_embedding = position_embedding.float()
-            # [batch_size,num_rois * nongt_dim, emb_dim]
+            # [batch_size, num_rois * nongt_dim, emb_dim]
             position_embedding_reshape = position_embedding.view(
                 (batch_size, -1, self.pos_emb_dim))
 
-            # position_feat_1, [batch_size,num_rois * nongt_dim, fc_dim]
+            # position_feat_1, [batch_size, num_rois * nongt_dim, fc_dim]
             position_feat_1 = self.pair_pos_fc1(position_embedding_reshape)
             position_feat_1_relu = nn.functional.relu(position_feat_1)
 
-            # aff_weight, [batch_size,num_rois, nongt_dim, fc_dim]
+            # aff_weight, [batch_size, num_rois, nongt_dim, fc_dim]
             aff_weight = position_feat_1_relu.view(
                 (batch_size, -1, nongt_dim, self.fc_dim))
 
-            # aff_weight, [batch_size,num_rois, fc_dim, nongt_dim]
+            # aff_weight, [batch_size, num_rois, fc_dim, nongt_dim]
             aff_weight = torch.transpose(aff_weight, 2, 3)
 
             thresh = torch.FloatTensor([1e-6]).cuda()
-            # weighted_aff, [batch_size,num_rois, fc_dim, nongt_dim]
+            # weighted_aff, [batch_size, num_rois, fc_dim, nongt_dim]
             threshold_aff = torch.max(aff_weight, thresh)
 
             weighted_aff += torch.log(threshold_aff)
 
         if adj_matrix is not None:
-            # weighted_aff_transposed, [batch_size,num_rois, nongt_dim, num_heads]
+            # weighted_aff_transposed, [batch_size, num_rois, nongt_dim, num_heads]
             weighted_aff_transposed = torch.transpose(weighted_aff, 2, 3)
             zero_vec = -9e15 * torch.ones_like(weighted_aff_transposed)
 
@@ -149,16 +149,16 @@ class GraphSelfAttentionLayer(nn.Module):
         # aff_softmax, [batch_size, num_rois, fc_dim, nongt_dim]
         aff_softmax = nn.functional.softmax(weighted_aff, 3)
 
-        # aff_softmax_reshape, [batch_size, num_rois*fc_dim, nongt_dim]
+        # aff_softmax_reshape, [batch_size, num_rois * fc_dim, nongt_dim]
         aff_softmax_reshape = aff_softmax.view((batch_size, -1, nongt_dim))
 
         # output_t, [batch_size, num_rois * fc_dim, feat_dim]
         output_t = torch.matmul(aff_softmax_reshape, v_data)
 
-        # output_t, [batch_size*num_rois, fc_dim * feat_dim, 1, 1]
+        # output_t, [batch_size * num_rois, fc_dim * feat_dim, 1, 1]
         output_t = output_t.view((-1, self.fc_dim * self.feat_dim, 1, 1))
 
-        # linear_out, [batch_size*num_rois, dim[2], 1, 1]
+        # linear_out, [batch_size * num_rois, dim[2], 1, 1]
         linear_out = self.linear_out_(output_t)
         output = linear_out.view((batch_size, num_rois, self.dim[2]))
         return output

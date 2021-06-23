@@ -14,6 +14,7 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 import torch.optim.lr_scheduler as lr_scheduler
 from tqdm import tqdm
+from torchviz import make_dot
 
 import utils
 from model.position_emb import prepare_graph_variables
@@ -41,7 +42,7 @@ def compute_score_with_logits(logits, labels, device):
 
 
 def train(model, train_loader, eval_loader, args, device=torch.device("cuda")):
-    N = len(train_loader.dataset)
+    n = len(train_loader.dataset)
     lr_default = args.base_lr
     num_epochs = args.epochs
     lr_decay_epochs = range(args.lr_decay_start, num_epochs,
@@ -136,14 +137,16 @@ def train(model, train_loader, eval_loader, args, device=torch.device("cuda")):
                     count = 0
                     att_entropy = 0
 
-        total_loss /= N
-        train_score = 100 * train_score / N
+        total_loss /= n
+        train_score = 100 * train_score / n
         print('Epoch %d, time: %.2f' % (epoch, time.time() - t))
         print('Train_loss: %.2f, norm: %.4f, score: %.2f'
               % (total_loss, total_norm / count_norm, train_score))
         if eval_loader is not None:
             eval_score, bound, entropy = evaluate(
                 model, eval_loader, device, args)
+
+            visualize(model, eval_loader, device, args)
 
             print('Eval score: %.2f (%.2f)'
                   % (100 * eval_score, 100 * bound))
@@ -203,6 +206,32 @@ def evaluate(model, dataloader, device, args):
         entropy = entropy / len(dataloader.dataset)
     model.train()
     return score, upper_bound, entropy
+
+
+@torch.no_grad()
+def visualize(model, dataloader, device, args):
+    model.eval()
+    relation_type = dataloader.dataset.relation_type
+    pbar = tqdm(dataloader)
+
+    for i, (v, norm_bb, q, target, _, _, bb, spa_adj_matrix,
+            sem_adj_matrix) in enumerate(pbar):
+        num_objects = v.size(1)
+        v = v.to(device)
+        norm_bb = norm_bb.to(device)
+        q = q.to(device)
+        target = target.to(device)
+
+        pos_emb, sem_adj_matrix, spa_adj_matrix = prepare_graph_variables(
+            relation_type, bb, sem_adj_matrix, spa_adj_matrix, num_objects,
+            args.nongt_dim, args.imp_pos_emb_dim, args.spa_label_num,
+            args.sem_label_num, device)
+
+        make_dot(model(v, norm_bb, q, pos_emb, sem_adj_matrix,
+                       spa_adj_matrix), params=dict(model.named_parameters()))
+
+    model.train()
+    # return score, upper_bound, entropy
 
 
 def calc_entropy(att):

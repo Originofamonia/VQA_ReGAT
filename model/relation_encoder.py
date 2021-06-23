@@ -67,7 +67,7 @@ class ImplicitRelationEncoder(nn.Module):
         """
         # [batch_size, num_rois, num_rois, 1]
         imp_adj_mat = torch.ones(v.size(0), v.size(1), v.size(1),
-                 1).to(v.device)  # [128, 36, 36, 1]
+                                 1).to(v.device)  # [128, 36, 36, 1]
         imp_v = self.v_transform(v) if self.v_transform else v  # [128, 36, 1024]
 
         for i in range(self.num_steps):
