@@ -67,6 +67,7 @@ def train(model, train_loader, eval_loader, args, device=torch.device("cuda")):
     last_eval_score, eval_score = 0, 0
     relation_type = train_loader.dataset.relation_type
 
+    visualize(model, eval_loader, device, args)
     for epoch in range(num_epochs):
         pbar = tqdm(train_loader)
         total_norm, count_norm = 0, 0
@@ -146,8 +147,6 @@ def train(model, train_loader, eval_loader, args, device=torch.device("cuda")):
             eval_score, bound, entropy = evaluate(
                 model, eval_loader, device, args)
 
-            visualize(model, eval_loader, device, args)
-
             print('Eval score: %.2f (%.2f)'
                   % (100 * eval_score, 100 * bound))
 
@@ -220,7 +219,7 @@ def visualize(model, dataloader, device, args):
         v = v.to(device)
         norm_bb = norm_bb.to(device)
         q = q.to(device)
-        target = target.to(device)
+        # target = target.to(device)
 
         pos_emb, sem_adj_matrix, spa_adj_matrix = prepare_graph_variables(
             relation_type, bb, sem_adj_matrix, spa_adj_matrix, num_objects,
