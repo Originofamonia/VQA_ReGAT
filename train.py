@@ -225,10 +225,10 @@ def visualize(model, dataloader, device, args):
             relation_type, bb, sem_adj_matrix, spa_adj_matrix, num_objects,
             args.nongt_dim, args.imp_pos_emb_dim, args.spa_label_num,
             args.sem_label_num, device)
-
+        print('before make_dot')
         make_dot(model(v, norm_bb, q, pos_emb, sem_adj_matrix,
                        spa_adj_matrix), params=dict(model.named_parameters()))
-
+        print('after make_dot')
     model.train()
     # return score, upper_bound, entropy
 
