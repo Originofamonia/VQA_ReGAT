@@ -67,7 +67,7 @@ def train(model, train_loader, eval_loader, args, device=torch.device("cuda")):
     last_eval_score, eval_score = 0, 0
     relation_type = train_loader.dataset.relation_type
 
-    visualize(model, eval_loader, device, args)
+    # visualize(model, eval_loader, device, args)
     for epoch in range(num_epochs):
         pbar = tqdm(train_loader)
         total_norm, count_norm = 0, 0
@@ -225,10 +225,10 @@ def visualize(model, dataloader, device, args):
             relation_type, bb, sem_adj_matrix, spa_adj_matrix, num_objects,
             args.nongt_dim, args.imp_pos_emb_dim, args.spa_label_num,
             args.sem_label_num, device)
-        print('before make_dot')
+        # need to separate forward, make_dot can't visualize combined model.
         make_dot(model(v, norm_bb, q, pos_emb, sem_adj_matrix,
                        spa_adj_matrix), params=dict(model.named_parameters()))
-        print('after make_dot')
+
     model.train()
     # return score, upper_bound, entropy
 
