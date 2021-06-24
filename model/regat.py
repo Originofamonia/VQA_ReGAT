@@ -66,7 +66,8 @@ class ReGAT(nn.Module):
             q_emb = self.q_emb(w_emb)  # [batch, q_dim]
             joint_emb, att = self.joint_embedding(v_emb, q_emb)
         else:  # mutan
-            joint_emb, att = self.joint_embedding(v_emb, q_emb_self_att)  # [64, 3129], [64, 2048]
+            # [64, 3129], [64, 2048]
+            joint_emb, att = self.joint_embedding(v_emb, q_emb_self_att)
 
         if self.classifier:
             logits = self.classifier(joint_emb)
