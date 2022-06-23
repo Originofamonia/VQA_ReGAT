@@ -58,7 +58,7 @@ def train(model, train_loader, eval_loader, args, device=torch.device("cuda")):
     # logger = utils.Logger(os.path.join(args.output, 'log.txt'))
     # best_eval_score = 0
 
-    print(model)
+    # print(model)
     print('optim: adamax lr=%.4f, decay_step=%d, decay_rate=%.2f,'
           % (lr_default, args.lr_decay_step,
              args.lr_decay_rate) + 'grad_clip=%.2f' % args.grad_clip)
@@ -123,7 +123,7 @@ def train(model, train_loader, eval_loader, args, device=torch.device("cuda")):
 
             if args.log_interval > 0:
                 average_loss += loss.data.item() * batch_multiplier
-                if model.module.fusion == "ban":
+                if model.fusion == "ban":
                     current_att_entropy = torch.sum(calc_entropy(att.data))
                     att_entropy += current_att_entropy / batch_size / att.size(1)
                 count += 1
@@ -171,8 +171,8 @@ def evaluate(model, dataloader, device, args):
     upper_bound = 0
     num_data = 0
     entropy = None
-    if model.module.fusion == "ban":
-        entropy = torch.Tensor(model.module.glimpse).zero_().to(device)
+    if model.fusion == "ban":
+        entropy = torch.Tensor(model.glimpse).zero_().to(device)
     pbar = tqdm(dataloader)
 
     for i, (v, norm_bb, q, target, _, _, bb, spa_adj_matrix,
@@ -194,9 +194,9 @@ def evaluate(model, dataloader, device, args):
         score += batch_score
         upper_bound += (target.max(1)[0]).sum()
         num_data += pred.size(0)
-        if att is not None and 0 < model.module.glimpse \
+        if att is not None and 0 < model.glimpse \
                 and entropy is not None:
-            entropy += calc_entropy(att.data)[:model.module.glimpse]
+            entropy += calc_entropy(att.data)[:model.glimpse]
 
     score = score / len(dataloader.dataset)
     upper_bound = upper_bound / len(dataloader.dataset)

@@ -22,6 +22,8 @@ import utils
 from utils import trim_collate
 
 
+os.environ['CUDA_VISIBLE_DEVICES'] = '1'
+
 def parse_args():
     parser = argparse.ArgumentParser()
     '''
@@ -55,7 +57,7 @@ def parse_args():
     '''
     parser.add_argument('--dataset', type=str, default='vqa',
                         choices=["vqa", "vqa_cp"])
-    parser.add_argument('--data_folder', type=str, default='data')
+    parser.add_argument('--data_folder', type=str, default='/home/xinyue/VQA_ReGat/data')
     parser.add_argument('--use_both', action='store_true',
                         help='use both train/val datasets to train?')
     parser.add_argument('--use_vg', action='store_true',
