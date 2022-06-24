@@ -8,6 +8,8 @@ MIT License
 """
 import os
 import time
+import numpy as np
+from sklearn.metrics import roc_auc_score
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -90,8 +92,8 @@ def train(model, train_loader, eval_loader, args, device=torch.device("cuda")):
 
         mini_batch_count = 0
         batch_multiplier = args.grad_accu_steps
-        for i, (v, norm_bb, q, target, _, _, bb, spa_adj_matrix,
-                sem_adj_matrix) in enumerate(pbar):
+        for i, batch in enumerate(pbar):
+            v, norm_bb, q, target, _, bb, spa_adj_matrix, sem_adj_matrix = batch
             batch_size = v.size(0)
             num_objects = v.size(1)
             if mini_batch_count == 0:
@@ -118,11 +120,11 @@ def train(model, train_loader, eval_loader, args, device=torch.device("cuda")):
                                                    args.grad_clip)
             count_norm += 1
             batch_score = compute_score_with_logits(pred, target, device).sum()
-            total_loss += loss.data.item() * batch_multiplier * v.size(0)
+            total_loss += loss.item() * batch_multiplier * v.size(0)
             train_score += batch_score
 
             if args.log_interval > 0:
-                average_loss += loss.data.item() * batch_multiplier
+                average_loss += loss.item() * batch_multiplier
                 if model.fusion == "ban":
                     current_att_entropy = torch.sum(calc_entropy(att.data))
                     att_entropy += current_att_entropy / batch_size / att.size(1)
@@ -130,9 +132,8 @@ def train(model, train_loader, eval_loader, args, device=torch.device("cuda")):
                 if i % args.log_interval == 0:
                     att_entropy /= count
                     average_loss /= count
-                    desc = "Step {} / {} (Epoch {}), ave_loss {:.3f}," \
-                           " att_entropy {:.3f}".format(i, len(train_loader), epoch,
-                                                        average_loss, att_entropy)
+                    desc = f"Epoch {epoch}; Step {i}/{len(train_loader)}; loss: " +\
+                        f"{average_loss:.3f}, att_entropy {att_entropy:.3f}"
                     pbar.set_description(desc)
                     average_loss = 0
                     count = 0
@@ -144,39 +145,33 @@ def train(model, train_loader, eval_loader, args, device=torch.device("cuda")):
         print('Train_loss: %.2f, norm: %.4f, score: %.2f'
               % (total_loss, total_norm / count_norm, train_score))
         if eval_loader is not None:
-            eval_score, bound, entropy = evaluate(
+            per_class_roc, micro_roc, macro_roc = evaluate(
                 model, eval_loader, device, args)
 
-            print('Eval score: %.2f (%.2f)'
-                  % (100 * eval_score, 100 * bound))
+            print(f'per class ROC: {per_class_roc};\n micro ROC: {micro_roc};\n'
+                f'macro ROC: {macro_roc}')
 
-            if entropy is not None:
-                info = ''
-                for i in range(entropy.size(0)):
-                    info = info + ' %.2f' % entropy[i]
-                print('Entropy: ' + info)
         # if (eval_loader is not None) \
         #         or (eval_loader is None and epoch >= args.saving_epoch):
         # logger.write("saving current model weights to folder")
-        # model_path = os.path.join(args.output, 'model_%d.pth' % epoch)
-        # opt = optimizer if args.save_optim else None
-        # utils.save_model(model_path, model, epoch, opt)
+    model_path = os.path.join(args.output, 'model_%d.pt' % epoch)
+    opt = optimizer if args.save_optim else None
+    utils.save_model(model_path, model, epoch, opt)
 
 
 @torch.no_grad()
 def evaluate(model, dataloader, device, args):
     model.eval()
     relation_type = dataloader.dataset.relation_type
-    score = 0
-    upper_bound = 0
-    num_data = 0
-    entropy = None
-    if model.fusion == "ban":
-        entropy = torch.Tensor(model.glimpse).zero_().to(device)
+
+    # if model.fusion == "ban":
+    #     entropy = torch.Tensor(model.glimpse).zero_().to(device)
     pbar = tqdm(dataloader)
 
-    for i, (v, norm_bb, q, target, _, _, bb, spa_adj_matrix,
-            sem_adj_matrix) in enumerate(pbar):
+    preds, targets = [], []
+
+    for i, batch in enumerate(pbar):
+        v, norm_bb, q, target, _, bb, spa_adj_matrix, sem_adj_matrix = batch
         num_objects = v.size(1)
         v = v.to(device)
         norm_bb = norm_bb.to(device)
@@ -189,22 +184,17 @@ def evaluate(model, dataloader, device, args):
             args.sem_label_num, device)
         pred, att = model(v, norm_bb, q, pos_emb, sem_adj_matrix,
                           spa_adj_matrix)
-        batch_score = compute_score_with_logits(
-            pred, target, device).sum()
-        score += batch_score
-        upper_bound += (target.max(1)[0]).sum()
-        num_data += pred.size(0)
-        if att is not None and 0 < model.glimpse \
-                and entropy is not None:
-            entropy += calc_entropy(att.data)[:model.glimpse]
 
-    score = score / len(dataloader.dataset)
-    upper_bound = upper_bound / len(dataloader.dataset)
-
-    if entropy is not None:
-        entropy = entropy / len(dataloader.dataset)
+        preds.append(pred.detach().cpu().numpy())
+        targets.append(target.detach().cpu().numpy())
+        
+    preds = np.vstack(preds)
+    targets = np.vstack(targets)
+    per_class_roc = roc_auc_score(targets, preds, average=None)
+    micro_roc = roc_auc_score(targets, preds, average="micro")
+    macro_roc = roc_auc_score(targets, preds, average="macro")
     model.train()
-    return score, upper_bound, entropy
+    return per_class_roc, micro_roc, macro_roc
 
 
 @torch.no_grad()

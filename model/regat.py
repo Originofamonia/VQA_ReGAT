@@ -31,9 +31,9 @@ class ReGAT(nn.Module):
         self.w_emb = w_emb
         self.q_emb = q_emb
         self.q_att = q_att
-        self.v_relation = v_relation
-        self.joint_embedding = joint_embedding
-        self.classifier = classifier
+        self.v_relation = v_relation  # 3 GAT
+        self.joint_embedding = joint_embedding  # BAN, BUTD, MUTAN
+        self.classifier = classifier  # MLP
 
     def forward(self, v, b, q, implicit_pos_emb, sem_adj_matrix,
                 spa_adj_matrix):

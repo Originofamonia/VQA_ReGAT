@@ -232,72 +232,73 @@ def _find_coco_id(vgv, vgv_id):
     return None
 
 
-class VQAFeatureDataset(Dataset):
+class MIMICFeatureDataset(Dataset):
     def __init__(self, name, dictionary, relation_type, dataroot='data',
-                 adaptive=False, pos_emb_dim=64, nongt_dim=36):
-        super(VQAFeatureDataset, self).__init__()
+                 adaptive=False, pos_emb_dim=64, nongt_dim=36, pure_classification=True):
+        super(MIMICFeatureDataset, self).__init__()
         assert name in ['train', 'val', 'test-dev2015', 'test2015']
 
-        ans2label_path = os.path.join(dataroot, 'cache',
-                                      'trainval_ans2label.pkl')
-        label2ans_path = os.path.join(dataroot, 'cache',
-                                      'trainval_label2ans.pkl')
+        ans2label_path = os.path.join(dataroot, 'mimic',
+                                      'mimic_ans2label_full.pkl')
+        label2ans_path = os.path.join(dataroot, 'mimic',
+                                      'mimic_label2ans_full.pkl')
         self.ans2label = pickle.load(open(ans2label_path, 'rb'))
         self.label2ans = pickle.load(open(label2ans_path, 'rb'))
         self.num_ans_candidates = len(self.ans2label)
         self.dictionary = dictionary
         self.relation_type = relation_type
         self.adaptive = adaptive
+        self.pure_classification = pure_classification
         prefix = '36'
         if 'test' in name:
             prefix = '_36'
 
-        h5_dataroot = dataroot+"/Bottom-up-features-adaptive"\
-            if self.adaptive else dataroot+"/Bottom-up-features-fixed"
-        imgid_dataroot = dataroot+"/imgids"
+        h5_dataroot = dataroot+ '/mimic'
 
-        self.img_id2idx = pickle.load(
-            open(os.path.join(imgid_dataroot, '%s%s_imgid2idx.pkl' %
-                              (name, '' if self.adaptive else prefix)), 'rb'))
-
-        h5_path = os.path.join(h5_dataroot, '%s%s.hdf5' %
-                               (name, '' if self.adaptive else prefix))
+        h5_path = os.path.join(h5_dataroot, 'cmb_bbox_features_full.hdf5')
 
         print('loading features from h5 file %s' % h5_path)
-        with h5py.File(h5_path, 'r') as hf:
-            self.features = np.array(hf.get('image_features'))
-            self.normalized_bb = np.array(hf.get('spatial_features'))
-            self.bb = np.array(hf.get('image_bb'))
-            if "semantic_adj_matrix" in hf.keys() \
-               and self.relation_type == "semantic":
-                self.semantic_adj_matrix = np.array(
-                                        hf.get('semantic_adj_matrix'))
-                print("Loaded semantic adj matrix from file...",
-                      self.semantic_adj_matrix.shape)
-            else:
-                self.semantic_adj_matrix = None
-                print("Setting semantic adj matrix to None...")
-            if "image_adj_matrix" in hf.keys()\
-               and self.relation_type == "spatial":
-                self.spatial_adj_matrix = np.array(hf.get('image_adj_matrix'))
-                print("Loaded spatial adj matrix from file...",
-                      self.spatial_adj_matrix.shape)
-            else:
-                self.spatial_adj_matrix = None
-                print("Setting spatial adj matrix to None...")
+        hf = h5py.File(h5_path, 'r')
+        self.features = hf['image_features']
+        self.normalized_bb = hf['spatial_features']
+        self.bb = hf['image_bb']
+        if "semantic_adj_matrix" in hf.keys() \
+            and self.relation_type == "semantic":
+            self.semantic_adj_matrix = hf['semantic_adj_matrix']
+            print("Loaded semantic adj matrix from file...",
+                    self.semantic_adj_matrix.shape)
+        else:
+            self.semantic_adj_matrix = None
+            print("Setting semantic adj matrix to None...")
+        if "image_adj_matrix" in hf.keys()\
+            and self.relation_type == "spatial":
+            self.spatial_adj_matrix = hf['image_adj_matrix']
+            print("Loaded spatial adj matrix from file...",
+                    self.spatial_adj_matrix.shape)
+        else:
+            self.spatial_adj_matrix = None
+            print("Setting spatial adj matrix to None...")
 
-            self.pos_boxes = None
-            if self.adaptive:
-                self.pos_boxes = np.array(hf.get('pos_boxes'))
-        self.entries = _load_dataset(dataroot, name, self.img_id2idx,
-                                     self.label2ans)
+        self.pos_boxes = None
+        if self.adaptive:
+            self.pos_boxes = hf['pos_boxes']
+        
+        if name == 'train':
+                dataset_path = '/mimic/mimic_dataset_train_full.pkl'
+        elif name == 'val':
+            dataset_path = '/mimic/mimic_dataset_val_full.pkl'
+        elif name == 'test':
+            dataset_path = '/mimic/mimic_dataset_test_full.pkl'
+        
+        with open(dataroot + dataset_path, 'rb') as f:
+            self.entries = pickle.load(f)  # qa
+        
         self.tokenize()
-
         self.tensorize()
         self.nongt_dim = nongt_dim
         self.emb_dim = pos_emb_dim
-        self.v_dim = self.features.size(1 if self.adaptive else 2)
-        self.s_dim = self.normalized_bb.size(1 if self.adaptive else 2)
+        self.v_dim = self.features.shape[-1]
+        self.s_dim = self.normalized_bb.shape[-1]
 
     def tokenize(self, max_length=14):
         """Tokenizes the questions.
@@ -306,35 +307,55 @@ class VQAFeatureDataset(Dataset):
         -1 represent nil, and should be treated as padding_idx in embedding
         """
         for entry in self.entries:
-            tokens = self.dictionary.tokenize(entry['question'], False)
-            tokens = tokens[:max_length]
-            if len(tokens) < max_length:
-                # Note here we pad to the back of the sentence
-                padding = [self.dictionary.padding_idx] * \
-                          (max_length - len(tokens))
-                tokens = tokens + padding
-            utils.assert_eq(len(tokens), max_length)
-            entry['q_token'] = tokens  # tokens word indices
+            entry['q_token'] = self.sub_tokenize(entry['question'], max_length=max_length)
+            # entry['a_token'] = self.sub_tokenize(self.enrich_answer(entry['answer']['answer']), max_length=max_length)
+
+    def enrich_answer(self, anss):
+        if anss[0] =="yes" or anss[0] == 'no':
+            return anss[0]
+        else:
+            if len(anss) == 1:
+                return 'an x-ray image contains ' + anss[0]
+            else:
+                ans = 'an x-ray image contains '
+                for i in range(len(anss)):
+                    if i == len(anss) -1:
+                        ans += 'and ' + anss[i]
+                    else:
+                        ans += anss[i]+', '
+            return ans
+
+    def sub_tokenize(self, text, max_length=14):
+        tokens = self.dictionary.tokenize(text, False)
+        tokens = tokens[:max_length]
+        if len(tokens) < max_length:
+            # Note here we pad to the back of the sentence
+            padding = [self.dictionary.padding_idx] * \
+                      (max_length - len(tokens))
+            tokens = tokens + padding
+        utils.assert_eq(len(tokens), max_length)
+        return tokens
 
     def tensorize(self):
-        self.features = torch.from_numpy(self.features)
-        self.normalized_bb = torch.from_numpy(self.normalized_bb)
-        self.bb = torch.from_numpy(self.bb)
-        if self.semantic_adj_matrix is not None:
-            self.semantic_adj_matrix = torch.from_numpy(
-                                        self.semantic_adj_matrix).double()
-        if self.spatial_adj_matrix is not None:
-            self.spatial_adj_matrix = torch.from_numpy(
-                                        self.spatial_adj_matrix).double()
-        if self.pos_boxes is not None:
-            self.pos_boxes = torch.from_numpy(self.pos_boxes)
+        # self.features = torch.from_numpy(self.features)
+        # self.normalized_bb = torch.from_numpy(self.normalized_bb)
+        # self.bb = torch.from_numpy(self.bb)
+        # if self.semantic_adj_matrix is not None:
+        #     self.semantic_adj_matrix = torch.from_numpy(
+        #                                 self.semantic_adj_matrix).double()
+        # if self.spatial_adj_matrix is not None:
+        #     self.spatial_adj_matrix = torch.from_numpy(
+        #                                 self.spatial_adj_matrix).double()
+        # if self.pos_boxes is not None:
+        #     self.pos_boxes = torch.from_numpy(self.pos_boxes)
 
         for entry in self.entries:
             question = torch.from_numpy(np.array(entry['q_token']))
             entry['q_token'] = question
+            # entry['a_token'] = torch.from_numpy(np.array(entry['a_token']))
 
             answer = entry['answer']
-            if answer is not None:
+            if answer:
                 labels = np.array(answer['labels'])
                 scores = np.array(answer['scores'], dtype=np.float32)
                 if len(labels):
@@ -349,23 +370,23 @@ class VQAFeatureDataset(Dataset):
     def __getitem__(self, index):
         entry = self.entries[index]
         # raw_question = entry["question"]
-        image_id = entry["image_id"]
+        image_id = entry["dicom_id"]
 
         question = entry['q_token']
-        question_id = entry['question_id']
+        # question_id = entry['question_id']
         if self.spatial_adj_matrix is not None:
-            spatial_adj_matrix = self.spatial_adj_matrix[entry["image"]]
+            spatial_adj_matrix = torch.from_numpy(self.spatial_adj_matrix[entry["image"]]).double()
         else:
             spatial_adj_matrix = torch.zeros(1).double()
         if self.semantic_adj_matrix is not None:
-            semantic_adj_matrix = self.semantic_adj_matrix[entry["image"]]
+            semantic_adj_matrix = torch.from_numpy(self.semantic_adj_matrix[entry["image"]]).double()
         else:
             semantic_adj_matrix = torch.zeros(1).double()
         if not self.adaptive:
             # fixed number of bounding boxes
-            features = self.features[entry['image']]
-            normalized_bb = self.normalized_bb[entry['image']]
-            bb = self.bb[entry["image"]]
+            features = torch.from_numpy(self.features[entry['image']])
+            normalized_bb = torch.from_numpy(self.normalized_bb[entry['image']])
+            bb = torch.from_numpy(self.bb[entry["image"]])
         else:
             features = self.features[
                 self.pos_boxes[
@@ -378,19 +399,25 @@ class VQAFeatureDataset(Dataset):
                     entry['image']][0]:self.pos_boxes[entry['image']][1], :]
 
         answer = entry['answer']
-        if answer is not None:
+        if answer:
             labels = answer['labels']
             scores = answer['scores']
             target = torch.zeros(self.num_ans_candidates)
+            # target_ori = torch.zeros(self.num_ans_candidates) 
+            # # there seems be no difference between target_ori and target2 right 
+            # # now. but they are designed to be different for vqa/classification
+            # if self.pure_classification:
+            #     target2 = torch.zeros(self.num_ans_candidates)
+            # else:
+            #     target2 = torch.zeros(self.num_ans_candidates-1)
             if labels is not None:
                 target.scatter_(0, labels, scores)
             return features, normalized_bb, question, target,\
-                question_id, image_id, bb, spatial_adj_matrix,\
+                image_id, bb, spatial_adj_matrix,\
                 semantic_adj_matrix
-
         else:
-            return features, normalized_bb, question, question_id,\
-                question_id, image_id, bb, spatial_adj_matrix,\
+            return features, normalized_bb, question, \
+                image_id, bb, spatial_adj_matrix,\
                 semantic_adj_matrix
 
     def __len__(self):
