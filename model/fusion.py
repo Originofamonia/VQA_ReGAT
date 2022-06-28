@@ -8,6 +8,7 @@ https://arxiv.org/abs/1903.12314
 
 This code is written by Linjie Li.
 """
+from turtle import forward
 import torch
 import torch.nn as nn
 from model.bilinear_attention import BiAttention
@@ -191,3 +192,103 @@ class MuTAN(nn.Module):
         att = self.attention(q_emb, v_relation)
         logits = self.fusion([q_emb, att])
         return logits, att
+
+
+class AttPooling(nn.Module):
+    def __init__(self, args) -> None:
+        super().__init__()
+        self.args = args
+        # no attflat_lan because regat's q is one vector
+        self.attflat_img = AttFlat(args)
+        self.proj_norm = nn.LayerNorm(args.flat_out_size)
+        self.proj = nn.Linear(args.flat_out_size, args.num_classes)
+    
+    def forward(self, v, q):
+        v_mask = self.make_mask(v)
+        img_feat_flat, v_w = self.attflat_img(  # [B, 512]
+            v, v_mask,  # change input to w/o mask
+        )
+        a = q + img_feat_flat
+        a = self.proj_norm(a)  # [B, 512]
+        logits = torch.sigmoid(self.proj(a))
+        return logits, v_w
+    
+    # Masking
+    def make_mask(self, feature):
+        return (torch.sum(torch.abs(feature), 
+            dim=-1) == 0).unsqueeze(1).unsqueeze(2)
+
+
+class AttFlat(nn.Module):
+    def __init__(self, args):
+        super(AttFlat, self).__init__()
+        self.opt = args
+
+        self.mlp = MLP(
+            in_size=args.num_hid,
+            mid_size=args.flat_mlp_size,
+            out_size=args.flat_glimpses,  # att heads
+            dropout_rate=args.dropout_rate,
+            use_relu=True
+        )
+
+        self.linear_merge = nn.Linear(
+            args.hidden_size * args.flat_glimpses,
+            args.flat_out_size
+        )
+
+    def forward(self, x, x_mask):
+        att_w = self.mlp(x)  # [B, 60, 1]
+        att_w = att_w.masked_fill(
+            x_mask.squeeze(1).squeeze(1).unsqueeze(2),
+            -1e9
+        )
+        att_w = F.softmax(att_w, dim=1)  # att weights
+
+        att_list = []
+        for i in range(self.opt.flat_glimpses):
+            att_list.append(
+                torch.sum(att_w[:, :, i: i + 1] * x, dim=1)
+            )
+
+        x_atted = torch.cat(att_list, dim=1)  # [B, 1024]
+        x_atted = self.linear_merge(x_atted)
+
+        return x_atted, att_w
+
+
+class FC(nn.Module):
+    def __init__(self, in_size, out_size, dropout_rate=0., use_relu=True):
+        super(FC, self).__init__()
+        self.dropout_r = dropout_rate
+        self.use_relu = use_relu
+
+        self.linear = nn.Linear(in_size, out_size)
+
+        if use_relu:
+            self.relu = nn.ReLU(inplace=True)
+
+        if dropout_rate > 0:
+            self.dropout = nn.Dropout(dropout_rate)
+
+    def forward(self, x):
+        x = self.linear(x)
+
+        if self.use_relu:
+            x = self.relu(x)
+
+        if self.dropout_r > 0:
+            x = self.dropout(x)
+
+        return x
+
+
+class MLP(nn.Module):
+    def __init__(self, in_size, mid_size, out_size, dropout_rate=0., use_relu=True):
+        super(MLP, self).__init__()
+
+        self.fc = FC(in_size, mid_size, dropout_rate=dropout_rate, use_relu=use_relu)
+        self.linear = nn.Linear(mid_size, out_size)
+
+    def forward(self, x):
+        return self.linear(self.fc(x))

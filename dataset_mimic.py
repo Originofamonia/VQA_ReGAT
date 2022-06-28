@@ -382,10 +382,10 @@ class MIMICFeatureDataset(Dataset):
             semantic_adj_matrix = torch.from_numpy(self.semantic_adj_matrix[entry["image"]]).double()
         else:
             semantic_adj_matrix = torch.zeros(1).double()
-        if not self.adaptive:
+        if not self.adaptive:  # adaptive or fixed number of regions
             # fixed number of bounding boxes
             features = torch.from_numpy(self.features[entry['image']])
-            normalized_bb = torch.from_numpy(self.normalized_bb[entry['image']])
+            normalized_bb = torch.from_numpy(np.float32(self.normalized_bb[entry['image']]))
             bb = torch.from_numpy(self.bb[entry["image"]])
         else:
             features = self.features[

@@ -72,7 +72,7 @@ class ImplicitRelationEncoder(nn.Module):
 
         for i in range(self.num_steps):
             v_cat_q = q_expand_v_cat(q, imp_v, mask=True)  # [128, 36, 2048]
-            # position embedding: [128, 20, 36, 64]
+            # position embedding: [B, 20, 36, 64]
             imp_v_rel = self.implicit_relation.forward(v_cat_q,
                                                        imp_adj_mat,
                                                        position_embedding)

@@ -168,7 +168,7 @@ def torch_extract_position_matrix(bbox, nongt_dim=36):
     center_x = 0.5 * (xmin + xmax)
     center_y = 0.5 * (ymin + ymax)
     # [batch_size, num_boxes, num_boxes]
-    delta_x = center_x - torch.transpose(center_x, 1, 2)
+    delta_x = center_x - torch.transpose(center_x, 1, 2)  # box i and j's x difference
     delta_x = torch.div(delta_x, bbox_width)
 
     delta_x = torch.abs(delta_x)
@@ -211,10 +211,11 @@ def prepare_graph_variables(relation_type, bb, sem_adj_matrix, spa_adj_matrix,
         sem_adj_matrix = torch_broadcast_adj_matrix(
                         sem_adj_matrix, label_num=sem_label_num, device=device)
         sem_adj_matrix_var = sem_adj_matrix.to(device)
-    else:
-        bb = bb.to(device)  # [128, 36, 4]
+    else:  # implicit
+        # like transformer's position encoding
+        bb = bb.to(device)  # [B, 36, 4]
         pos_mat = torch_extract_position_matrix(bb, nongt_dim=nongt_dim)  # [128, 20, 36, 4]
         pos_emb = torch_extract_position_embedding(
                         pos_mat, feat_dim=pos_emb_dim, device=device)  # [128, 20, 36, 64]
-        pos_emb_var = pos_emb.to(device)
+        pos_emb_var = pos_emb.to(device)  # [B, 20, 60, 64]
     return pos_emb_var, sem_adj_matrix_var, spa_adj_matrix_var

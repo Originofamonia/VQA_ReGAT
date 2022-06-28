@@ -11,7 +11,7 @@ This code is written by Linjie Li.
 
 import torch
 import torch.nn as nn
-from model.fusion import BAN, BUTD, MuTAN
+from model.fusion import BAN, BUTD, MuTAN, AttPooling
 from model.language_model import WordEmbedding, QuestionEmbedding,\
                                  QuestionSelfAttention
 from model.relation_encoder import ImplicitRelationEncoder,\
@@ -44,19 +44,19 @@ class ReGAT(nn.Module):
         pos: [batch_size, num_objs, nongt_dim, emb_dim]
         sem_adj_matrix: [batch_size, num_objs, num_objs, num_edge_labels]
         spa_adj_matrix: [batch_size, num_objs, num_objs, num_edge_labels]
-
+        implicit_pos_emb: [B, 20, 60, 64]
         return: logits, not probs
         """
         w_emb = self.w_emb(q)  # [64, 14, 600]
         q_emb_seq = self.q_emb.forward_all(w_emb)  # [batch, q_len, q_dim]  [64, 14, 1024]
-        q_emb_self_att = self.q_att(q_emb_seq)  # [64, 1024]
+        q_emb_self_att = self.q_att(q_emb_seq)  # [B, 1024]
 
         # [batch_size, num_rois, out_dim]
         if self.relation_type == "semantic":
             v_emb = self.v_relation.forward(v, sem_adj_matrix, q_emb_self_att)
         elif self.relation_type == "spatial":
             v_emb = self.v_relation.forward(v, spa_adj_matrix, q_emb_self_att)
-        else:  # implicit
+        else:  # implicit & att pooling
             v_emb = self.v_relation.forward(v, implicit_pos_emb,
                                             q_emb_self_att)  # [64, 36, 1024]
 
@@ -65,7 +65,7 @@ class ReGAT(nn.Module):
         elif self.fusion == "butd":
             q_emb = self.q_emb(w_emb)  # [batch, q_dim]
             joint_emb, att = self.joint_embedding(v_emb, q_emb)
-        else:  # mutan
+        else:  # mutan & att pooling
             # [64, 3129], [64, 2048]
             joint_emb, att = self.joint_embedding(v_emb, q_emb_self_att)
 
@@ -77,6 +77,7 @@ class ReGAT(nn.Module):
 
 
 def build_regat(dataset, args):
+    args.num_classes = dataset.num_ans_candidates
     print("Building ReGAT model with %s relation and %s fusion method" %
           (args.relation_type, args.fusion))
     w_emb = WordEmbedding(dataset.dictionary.ntoken, 300, .0, args.op)
@@ -116,6 +117,9 @@ def build_regat(dataset, args):
         gamma = args.ban_gamma
     elif args.fusion == "butd":
         joint_embedding = BUTD(args.relation_dim, args.num_hid, args.num_hid)
+    elif args.fusion == 'att_pooling':
+        joint_embedding = AttPooling(args)
+        classifier = None
     else:
         joint_embedding = MuTAN(args.relation_dim, args.num_hid,
                                 dataset.num_ans_candidates, args.mutan_gamma)

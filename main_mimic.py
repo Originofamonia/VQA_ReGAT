@@ -41,7 +41,7 @@ def parse_args():
     parser.add_argument('--output', type=str, default='saved_models/')
     parser.add_argument('--save_optim', action='store_true',
                         help='save optimizer')
-    parser.add_argument('--log_interval', type=int, default=5,
+    parser.add_argument('--log_interval', type=int, default=15,
                         help='Print log for certain steps')
     parser.add_argument('--seed', type=int, default=444, help='random seed')
 
@@ -67,13 +67,19 @@ def parse_args():
     '''
     parser.add_argument('--relation_type', type=str, default='implicit',
                         choices=["spatial", "semantic", "implicit"])
-    parser.add_argument('--fusion', type=str, default='ban',
-                        choices=["ban", "butd", "mutan"])
+    parser.add_argument('--fusion', type=str, default='att_pooling',
+                        choices=["ban", "butd", "mutan", "att_pooling"])
     parser.add_argument('--tfidf', action='store_true',
                         help='tfidf word embedding?')
     parser.add_argument('--op', type=str, default='c',
                         help="op used in tfidf word embedding")
     parser.add_argument('--num_hid', type=int, default=1024)
+    parser.add_argument('--flat_mlp_size', type=int, default=512)
+    parser.add_argument('--hidden_size', type=int, default=1024)
+    parser.add_argument('--flat_out_size', type=int, default=1024, help='same as q dim, v+q')
+    parser.add_argument('--num_classes', type=int, default=1, help='num of classes, updated later')
+    parser.add_argument('--flat_glimpses', type=int, default=1)
+    parser.add_argument('--dropout_rate', type=float, default=0.2)
     '''
     Fusion Hyperparameters
     '''
